@@ -3,12 +3,13 @@ package com.example.composecodelabweek2_1
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -19,20 +20,26 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.TravelExplore
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.VerticalAlignmentLine
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil.compose.rememberImagePainter
 import com.example.composecodelabweek2_1.ui.theme.ComposeCodelabWeek21Theme
+import kotlinx.coroutines.launch
 
 //WEEK 2-1 : LAYOUTS CODE LAB
-//WHAT'S NEW : Scaffold API
+//WHAT'S NEW : List
+    //일반 Column 으로 구현한 리스트 : 모든 아이템을 렌더링함
+    //보이는 화면 구간에 있는 것만 렌더링 시키는 리스트가 lazy list : lazy column 으로 구현
 
-    //it is the most high-level composable
-    //provides slots for the most common top-level Material components such as TopAppBar, BottomAppBar, FloatingActionButton and Drawer.
+//CoroutineScope
+
 
 
 class MainActivity : ComponentActivity() {
@@ -40,56 +47,67 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             ComposeCodelabWeek21Theme {
-                LayoutsCodelab()
+                ScrollingList()
             }
         }
     }
 }
 
 @Composable
-fun LayoutsCodelab() {
-    Scaffold(     //Scaffold has a slot for a top AppBar
-        topBar = {
-            // 이 안에서 자유롭게 we can fill the slot with any composable we want
-            TopAppBar(  //app bar 넣기
-                //TopAppBar composable has slots for a title, navigation icon, actions.)
-                title = {
-                    Text(text = "Layouts Codelab")
-                },
-                actions = {  //normally actions modify the state of your app
-                    Row {
-                        IconButton(onClick = { /*TODO*/ }) {
-                            Icon(Icons.Filled.Facebook, contentDescription = null)  // 아이콘 넣기
-                        }
-                        IconButton(onClick = { /*TODO*/ }) {
-                            Icon(Icons.Filled.TravelExplore, contentDescription = null)
-                        }
+fun ScrollingList(){
+    val listSize = 100
 
-                    }
+    //scrolling position 저장
+    val scrollState = rememberLazyListState()
+
+    //스크롤을 외부에서 컨트롤 해보기 : 버튼 클릭하면 특정위치로 스크롤
+    //coroutine scope (where our animated scroll will be executed) 저장
+    val coroutineScope = rememberCoroutineScope()
+
+    //버튼 두 개 추가
+    Column {
+        Row {
+            Button(onClick = {
+                coroutineScope.launch {
+                    scrollState.animateScrollToItem(0) // position 0으로 스크롤해라
                 }
+            }) {
+                Text("Scroll to the top")
+            }
 
-            )
-
-//            Text(  //TopAppBar 말고 topBar 안에 이렇게 아무거나 넣을 수도 있음
-//                text = "LayoutsCodelab",
-//                style = MaterialTheme.typography.h3
-//            )
-
+            Button(onClick = {
+                coroutineScope.launch {
+                    scrollState.animateScrollToItem(listSize - 1)
+                }
+            }) {
+                Text("Scroll to the end")
+            }
         }
-    ) { innerPadding ->                  //람다가 innerPadding 을 인자로 받고
-        BodyContent(modifier = Modifier
-            .padding(innerPadding)       //이 innerPadding 을 root composable에 한번에 적용
-            .padding(8.dp))              // + bodyContent 에 padding 추가로 적용
+        //리스트 부분
+        LazyColumn(state = scrollState) {
+            items(listSize) {
+                ImageListItem(index = it)
+            }
+        }
     }
+
 }
 
-//함수 쪼개기
-//새로운 composable 함수를 만들 때 아래와 같이 default Modifier 을 modifier 인자로 갖는게 좋음 -> reusable composable
+//리스트 내 각 아이템
 @Composable
-fun BodyContent(modifier: Modifier = Modifier) {  //modifier 을 인자로 함
-    Column(modifier = modifier) {
-        Text(text = "Hi there!")
-        Text(text = "I'm excited for going through the Layouts codelab")
+fun ImageListItem(index: Int) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Image(
+            painter = rememberImagePainter(
+            data = "https://developer.android.com/images/brand/Android_Robot.png"
+            ),
+            contentDescription = "Android Logo",
+            modifier = Modifier
+                .size(50.dp)
+                .padding(start = 20.dp)
+        )
+        Spacer(modifier = Modifier.width(10.dp))
+        Text("Item #$index", style = MaterialTheme.typography.subtitle1)
     }
 }
 
@@ -98,6 +116,6 @@ fun BodyContent(modifier: Modifier = Modifier) {  //modifier 을 인자로 함
 @Composable
 fun LayoutsCodelabPreview() {
     ComposeCodelabWeek21Theme {
-        LayoutsCodelab()
+        ScrollingList()
     }
 }
