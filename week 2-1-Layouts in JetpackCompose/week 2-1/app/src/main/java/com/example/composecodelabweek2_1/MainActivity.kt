@@ -24,22 +24,20 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.VerticalAlignmentLine
+import androidx.compose.ui.layout.*
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberImagePainter
 import com.example.composecodelabweek2_1.ui.theme.ComposeCodelabWeek21Theme
 import kotlinx.coroutines.launch
 
 //WEEK 2-1 : LAYOUTS CODE LAB
-//WHAT'S NEW : List
-    //일반 Column 으로 구현한 리스트 : 모든 아이템을 렌더링함
-    //보이는 화면 구간에 있는 것만 렌더링 시키는 리스트가 lazy list : lazy column 으로 구현
 
-//CoroutineScope
-
+//Principles of Layout
+    //you can only measure your children once
 
 
 class MainActivity : ComponentActivity() {
@@ -47,75 +45,95 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             ComposeCodelabWeek21Theme {
-                ScrollingList()
+                BodyContent()
             }
         }
     }
 }
 
-@Composable
-fun ScrollingList(){
-    val listSize = 100
+fun Modifier.firstBaselineToTop(
+    firstBaselineToTop: Dp
+) = this.then(
+    layout { measurable, constraints ->
+        val placeable = measurable.measure(constraints)
 
-    //scrolling position 저장
-    val scrollState = rememberLazyListState()
+        // Check the composable has a first baseline
+        check(placeable[FirstBaseline] != AlignmentLine.Unspecified)
+        val firstBaseline = placeable[FirstBaseline]
 
-    //스크롤을 외부에서 컨트롤 해보기 : 버튼 클릭하면 특정위치로 스크롤
-    //coroutine scope (where our animated scroll will be executed) 저장
-    val coroutineScope = rememberCoroutineScope()
-
-    //버튼 두 개 추가
-    Column {
-        Row {
-            Button(onClick = {
-                coroutineScope.launch {
-                    scrollState.animateScrollToItem(0) // position 0으로 스크롤해라
-                }
-            }) {
-                Text("Scroll to the top")
-            }
-
-            Button(onClick = {
-                coroutineScope.launch {
-                    scrollState.animateScrollToItem(listSize - 1)
-                }
-            }) {
-                Text("Scroll to the end")
-            }
-        }
-        //리스트 부분
-        LazyColumn(state = scrollState) {
-            items(listSize) {
-                ImageListItem(index = it)
-            }
+        // Height of the composable with padding - first baseline
+        val placeableY = firstBaselineToTop.roundToPx() - firstBaseline
+        val height = placeable.height + placeableY
+        layout(placeable.width, height) {
+            // Where the composable gets placed
+            placeable.placeRelative(0, placeableY)
         }
     }
-
-}
-
-//리스트 내 각 아이템
-@Composable
-fun ImageListItem(index: Int) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Image(
-            painter = rememberImagePainter(
-            data = "https://developer.android.com/images/brand/Android_Robot.png"
-            ),
-            contentDescription = "Android Logo",
-            modifier = Modifier
-                .size(50.dp)
-                .padding(start = 20.dp)
-        )
-        Spacer(modifier = Modifier.width(10.dp))
-        Text("Item #$index", style = MaterialTheme.typography.subtitle1)
-    }
-}
-
+)
 
 @Preview
 @Composable
-fun LayoutsCodelabPreview() {
+fun TextWithPaddingToBaselinePreview() {
     ComposeCodelabWeek21Theme {
-        ScrollingList()
+        Text("Hi there!", Modifier.firstBaselineToTop(32.dp))
+    }
+}
+
+@Preview
+@Composable
+fun TextWithNormalPaddingPreview() {
+    ComposeCodelabWeek21Theme {
+        Text("Hi there!", Modifier.padding(top = 32.dp))
+    }
+}
+
+@Composable
+fun MyOwnColumn(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    Layout(
+        modifier = modifier,
+        content = content
+    ) { measurables, constraints ->
+        // measure and position children given constraints logic here
+        // Don't constrain child views further, measure them with given constraints
+        // List of measured children
+        val placeables = measurables.map { measurable ->
+            // Measure each child
+            measurable.measure(constraints)
+        }
+        // Track the y co-ord we have placed children up to
+        var yPosition = 0
+
+        // Set the size of the layout as big as it can
+        layout(constraints.maxWidth, constraints.maxHeight) {
+            // Place children in the parent layout
+            placeables.forEach { placeable ->
+                // Position item on the screen
+                placeable.placeRelative(x = 0, y = yPosition)
+
+                // Record the y co-ord placed up to
+                yPosition += placeable.height
+            }
+        }
+    }
+}
+
+@Composable
+fun BodyContent(modifier: Modifier = Modifier) {
+    MyOwnColumn(modifier.padding(8.dp)) {
+        Text("MyOwnColumn")
+        Text("places items")
+        Text("vertically.")
+        Text("We've done it by hand!")
+    }
+}
+
+@Preview
+@Composable
+fun Preview() {
+    ComposeCodelabWeek21Theme {
+        BodyContent()
     }
 }
