@@ -27,6 +27,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import com.codelabs.state.R
 import java.util.UUID
 
+//**These are data structures used to represent a TodoItem
+
 data class TodoItem(
     val task: String,
     val icon: TodoIcon = TodoIcon.Default,

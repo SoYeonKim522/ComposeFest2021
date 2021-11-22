@@ -21,7 +21,18 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.material.Surface
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import com.codelabs.state.ui.StateCodelabTheme
+
+/**
+ Week 2-2 : Building an interactive To-do app using unidirectional data flow in compose !!
+
+  * TodoScreen 을 ViewModel 과 연결시켜줘야 하는데 (그래서 버튼 이벤트 등 동작)
+    This composable will be a bridge between the state stored in our ViewModel and the TodoScreen composable that's already defined in the project.
+
+ */
 
 class TodoActivity : AppCompatActivity() {
 
@@ -32,9 +43,22 @@ class TodoActivity : AppCompatActivity() {
         setContent {
             StateCodelabTheme {
                 Surface {
-                    // TODO: build the screen in compose
+                    //build the screen in compose (integrating TodoScreen into TodoActivity)
+                    TodoActivityScreen(todoViewModel)
                 }
             }
         }
     }
+}
+
+//TodoScreen 을 ViewModel 과 연결하는 부분
+@Composable
+private fun TodoActivityScreen(todoViewModel: TodoViewModel) {
+//    val items = listOf<TodoItem>()
+    val items: List<TodoItem> by todoViewModel.todoItems.observeAsState(listOf())  //Edit TodoActivityScreen to observe the todoItems LiveData using observeAsState
+    TodoScreen(
+        items = items,
+        onAddItem = { todoViewModel.addItem(it) },
+        onRemoveItem = { todoViewModel.removeItem(it) }
+    )
 }

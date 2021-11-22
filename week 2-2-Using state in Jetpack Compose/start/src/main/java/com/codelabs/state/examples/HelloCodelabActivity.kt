@@ -36,7 +36,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.codelabs.state.databinding.ActivityHelloCodelabBinding
 
 /**
- * An example showing unstructured state stored in an Activity.
+ * An example showing unstructured state stored in an Activity. - step 3
+    * It tends to become hard to manage as the UI grows.
  */
 class HelloCodelabActivity : AppCompatActivity() {
 
@@ -63,17 +64,23 @@ class HelloCodelabActivity : AppCompatActivity() {
     }
 }
 
+
+/////////////////////unidirectional data flow////////////////////////
+// a design where events flow up and state flows down
+// to help fix some problems with unstructured state, we introduced Android Architecture Components which contain ViewModel and LiveData.
+
 /**
  * A ViewModel extracts _state_ from the UI and defines _events_ that can update it.
  */
 class HelloViewModel : ViewModel() {
 
-    // LiveData holds state which is observed by the UI
+    // LiveData holds state which is observed by the UI  (LiveData is an observable state holder)
     // (state flows down from ViewModel)
     private val _name = MutableLiveData("")
     val name: LiveData<String> = _name
 
     // onNameChanged is an event we're defining that the UI can invoke
+    // onNameChanged is called by the UI when the text input changes -> sets the state of '_name' -> 'name''s observer called and notifies the changes
     // (events flow up from UI)
     fun onNameChanged(newName: String) {
         _name.value = newName

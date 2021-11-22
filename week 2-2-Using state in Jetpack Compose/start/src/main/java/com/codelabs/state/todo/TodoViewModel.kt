@@ -14,24 +14,33 @@
  * limitations under the License.
  */
 
+//** A ViewModel that you will integrate with Compose to build the To-do screen.
+// You will connect it to Compose and extend it to add more features as you complete this codelab.
+
 package com.codelabs.state.todo
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
+//We want to use this ViewModel to hoist the state from TodoScreen(Activity)
+
 class TodoViewModel : ViewModel() {
 
+    // state: todoItems
     private var _todoItems = MutableLiveData(listOf<TodoItem>())
     val todoItems: LiveData<List<TodoItem>> = _todoItems
 
+    // event: addItem
     fun addItem(item: TodoItem) {
         _todoItems.value = _todoItems.value!! + listOf(item)
     }
 
+    // event: removeItem
     fun removeItem(item: TodoItem) {
         _todoItems.value = _todoItems.value!!.toMutableList().also {
             it.remove(item)
         }
     }
+
 }

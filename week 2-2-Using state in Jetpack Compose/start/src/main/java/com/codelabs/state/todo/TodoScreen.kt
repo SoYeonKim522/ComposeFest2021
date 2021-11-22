@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+//**Compose implementation of a To-do screen that you will build during this codelab.
+
 package com.codelabs.state.todo
 
 import androidx.compose.foundation.clickable
@@ -27,6 +29,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Button
 import androidx.compose.material.Icon
+import androidx.compose.material.LocalContentColor
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -39,11 +42,22 @@ import kotlin.random.Random
 
 /**
  * Stateless component that is responsible for the entire todo screen.
+ * (A stateless composable is a composable that cannot directly change any state)
+ * editable list 가능 by using a technique called state hoisting.
+ * State hoisting is the pattern of moving state up to make a component stateless.
  *
  * @param items (state) list of [TodoItem] to display
  * @param onAddItem (event) request an item be added
  * @param onRemoveItem (event) request an item be removed
+ *
+ * UI 가 바뀌는 과정
+ * : user requests an item be added or removed -> TodoScreen calls onAddItem or onRemoveItem -> the caller of TodoScreen update state
+ *   state 가 바뀌면 TodoScreen 가 다시 호출  with the new items and it can display them on screen
+
+ * TodoScreen 을 ViewModel 과 연결시켜줘야 함 (그래서 버튼 이벤트 등 동작) (연결 매개체 : TodoActivityScreen)
+
  */
+
 @Composable
 fun TodoScreen(
     items: List<TodoItem>,
@@ -91,9 +105,12 @@ fun TodoRow(todo: TodoItem, onItemClicked: (TodoItem) -> Unit, modifier: Modifie
             .padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(todo.task)
+        Text(todo.task)     //data.kt에 있는 텍스트
+//        val iconAlpha = randomTint()
+        val iconAlpha : Float = remember(todo.id) { randomTint() }
         Icon(
-            imageVector = todo.icon.imageVector,
+            imageVector = todo.icon.imageVector,   //data.kt에 있는 아이콘
+            tint = LocalContentColor.current.copy(alpha = iconAlpha),
             contentDescription = stringResource(id = todo.icon.contentDescription)
         )
     }
