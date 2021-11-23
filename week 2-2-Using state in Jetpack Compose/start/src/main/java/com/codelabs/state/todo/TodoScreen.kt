@@ -32,7 +32,9 @@ import androidx.compose.material.Icon
 import androidx.compose.material.LocalContentColor
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -59,8 +61,7 @@ import kotlin.random.Random
 
 
 /**
- * What's new : How to make stateful composables
- * A stateful composable is a composable that owns a piece of state that it can change over time
+ * What's new : using (composables functions 가 가지고 있는) memory to add state to a composable.
  */
 
 
@@ -71,27 +72,81 @@ fun TodoScreen(
     onRemoveItem: (TodoItem) -> Unit
 ) {
     Column {
-        LazyColumn(  //to-do screen 이 호출될 때마다 lazy column 이 recompose
-            modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(top = 8.dp)
-        ) {
-            items(items = items) {
-                TodoRow(
-                    todo = it,
-                    onItemClicked = { onRemoveItem(it) },
-                    modifier = Modifier.fillParentMaxWidth()
-                )
+        // add TodoItemInputBackground and TodoItem at the top of TodoScreen
+        TodoItemInputBackground(elevate = true, modifier = Modifier.fillMaxWidth()) {
+            TodoItemInput(onItemComplete = onAddItem)
+            LazyColumn(  //to-do screen 이 호출될 때마다 lazy column 이 recompose
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(top = 8.dp)
+            ) {
+                items(items = items) {
+                    TodoRow(
+                        todo = it,
+                        onItemClicked = { onRemoveItem(it) },
+                        modifier = Modifier.fillParentMaxWidth()
+                    )
+                }
+            }
+
+            // For quick testing, a random item generator button
+            Button(
+                onClick = { onAddItem(generateRandomTodoItem()) },
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+            ) {
+                Text("Add random item")
             }
         }
+    }
+}
 
-        // For quick testing, a random item generator button
-        Button(
-            onClick = { onAddItem(generateRandomTodoItem()) },
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
+/**
+ * add 버튼을 클릭하면 실제로 to-do item 이 추가되게 하기
+ * we need to move the state from the child composable(TodoInputTextField) to the parent (TodoItemInput).
+ *   => state hoisting (lift state from a composable to make it stateless)
+ *      It is the main pattern to build unidirectional data flow designs
+ */
+
+//EditText(=text field) 추가
+//This is child composable of TodoItemInput
+@Composable
+fun TodoInputTextField(text: String, onTextChange: (String) -> Unit, modifier: Modifier) { //add a value(text) and onValueChange(onTextChange) parameter
+//    val (text, setText) = remember {  // -> to remember itself
+//        mutableStateOf("")
+//    }
+//    TodoInputText(text, setText, modifier)
+    TodoInputText(text, onTextChange, modifier)
+}
+
+//This is parent composable of TodoInputTextField
+@Composable
+fun TodoItemInput(onItemComplete: (TodoItem) -> Unit) {  //이벤트(onItemComplete)를 인자로 함.
+    // onItemComplete is an event will fire when an item (TodoItem) is completed by the user
+
+    val (text, setText) = remember { mutableStateOf("") }  //원래 TodoInputTextField 에 있던 부분인데 부모 안으로 이동
+
+    Column {
+        Row(Modifier
+            .padding(horizontal = 16.dp)
+            .padding(top = 16.dp)
         ) {
-            Text("Add random item")
+            TodoInputTextField(
+                text = text,            //추가
+                onTextChange = setText, //추가
+                modifier = Modifier
+                .weight(1f)
+                .padding(end = 8.dp)
+            )
+            TodoEditButton(
+                onClick = {
+                    onItemComplete(TodoItem(text))   // send onItemComplete event up
+                    setText("")        // clear the internal text
+                },
+                text = "Add",
+                modifier = Modifier.align(Alignment.CenterVertically),
+                enabled = text.isNotBlank()    // enable if text is not blank
+            )
         }
     }
 }
@@ -104,12 +159,14 @@ fun TodoScreen(
  * @param modifier modifier for this element
  */
 @Composable
-fun TodoRow(todo: TodoItem,
-            onItemClicked: (TodoItem) -> Unit,
-            modifier: Modifier = Modifier,
-            iconAlpha : Float = remember(todo.id) { randomTint() } ) {  //인자 위치로 이동 -> 이걸 적용할지 안할지 바로 컨트롤 가능
+fun TodoRow(
+    todo: TodoItem,
+    onItemClicked: (TodoItem) -> Unit,
+    modifier: Modifier = Modifier,
+    iconAlpha : Float = remember(todo.id) { randomTint() }
+) {  //인자 위치로 이동 -> 이걸 적용할지 안할지 바로 컨트롤 가능
     Row(
-        modifier = modifier
+        modifier
             .clickable { onItemClicked(todo) }
             .padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween
@@ -128,6 +185,10 @@ fun TodoRow(todo: TodoItem,
 private fun randomTint(): Float {
     return Random.nextFloat().coerceIn(0.3f, 0.9f)
 }
+
+@Preview
+@Composable
+fun PreviewTodoItemInput() = TodoItemInput(onItemComplete = { })
 
 @Preview
 @Composable
