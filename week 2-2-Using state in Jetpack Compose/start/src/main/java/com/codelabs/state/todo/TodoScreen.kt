@@ -55,8 +55,14 @@ import kotlin.random.Random
  *   state 가 바뀌면 TodoScreen 가 다시 호출  with the new items and it can display them on screen
 
  * TodoScreen 을 ViewModel 과 연결시켜줘야 함 (그래서 버튼 이벤트 등 동작) (연결 매개체 : TodoActivityScreen)
-
  */
+
+
+/**
+ * What's new : How to make stateful composables
+ * A stateful composable is a composable that owns a piece of state that it can change over time
+ */
+
 
 @Composable
 fun TodoScreen(
@@ -65,7 +71,7 @@ fun TodoScreen(
     onRemoveItem: (TodoItem) -> Unit
 ) {
     Column {
-        LazyColumn(
+        LazyColumn(  //to-do screen 이 호출될 때마다 lazy column 이 recompose
             modifier = Modifier.weight(1f),
             contentPadding = PaddingValues(top = 8.dp)
         ) {
@@ -98,7 +104,10 @@ fun TodoScreen(
  * @param modifier modifier for this element
  */
 @Composable
-fun TodoRow(todo: TodoItem, onItemClicked: (TodoItem) -> Unit, modifier: Modifier = Modifier) {
+fun TodoRow(todo: TodoItem,
+            onItemClicked: (TodoItem) -> Unit,
+            modifier: Modifier = Modifier,
+            iconAlpha : Float = remember(todo.id) { randomTint() } ) {  //인자 위치로 이동 -> 이걸 적용할지 안할지 바로 컨트롤 가능
     Row(
         modifier = modifier
             .clickable { onItemClicked(todo) }
@@ -106,8 +115,8 @@ fun TodoRow(todo: TodoItem, onItemClicked: (TodoItem) -> Unit, modifier: Modifie
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(todo.task)     //data.kt에 있는 텍스트
-//        val iconAlpha = randomTint()
-        val iconAlpha : Float = remember(todo.id) { randomTint() }
+//        val iconAlpha = randomTint()  //-> 아이콘 tint 가 클릭할 때마다 바뀜
+//        val iconAlpha : Float = remember(to do.id) { randomTint() }  //to make TodoRow to store the previous value
         Icon(
             imageVector = todo.icon.imageVector,   //data.kt에 있는 아이콘
             tint = LocalContentColor.current.copy(alpha = iconAlpha),
