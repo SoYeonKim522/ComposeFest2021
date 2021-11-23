@@ -54,11 +54,9 @@ class TodoActivity : AppCompatActivity() {
 //TodoScreen 을 ViewModel 과 연결하는 부분
 @Composable
 private fun TodoActivityScreen(todoViewModel: TodoViewModel) {
-//    val items = listOf<TodoItem>()
-    val items: List<TodoItem> by todoViewModel.todoItems.observeAsState(listOf())  //Edit TodoActivityScreen to observe the todoItems LiveData using observeAsState
     TodoScreen(
-        items = items,
-        onAddItem = { todoViewModel.addItem(it) },
-        onRemoveItem = { todoViewModel.removeItem(it) }
+        items = todoViewModel.todoItems,
+        onAddItem = todoViewModel::addItem,
+        onRemoveItem = todoViewModel::removeItem
     )
 }

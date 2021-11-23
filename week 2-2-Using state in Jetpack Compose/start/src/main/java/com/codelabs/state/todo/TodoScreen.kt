@@ -65,7 +65,7 @@ fun TodoScreen(
     Column {
         // add TodoItemInputBackground and TodoItem at the top of TodoScreen
         TodoItemInputBackground(elevate = true, modifier = Modifier.fillMaxWidth()) {
-            TodoItemInput(onItemComplete = onAddItem)
+//            TodoItemInput(onItemComplete = onAddItem)
             LazyColumn(  //to-do screen 이 호출될 때마다 lazy column 이 recompose
                 modifier = Modifier.weight(1f),
                 contentPadding = PaddingValues(top = 8.dp)
@@ -101,21 +101,25 @@ fun TodoScreen(
 
 //EditText(=text field) 추가
 //This is child composable of TodoItemInput
-//@Composable
-//fun TodoInputTextField(text: String, onTextChange: (String) -> Unit, modifier: Modifier) { //add a value(text) and onValueChange(onTextChange) parameter
-////    val (text, setText) = remember {  // -> to remember itself
-////        mutableStateOf("")
-////    }
-////    TodoInputText(text, setText, modifier)
-//    TodoInputText(text, onTextChange, modifier)
-//}
-
-
-//This is parent composable of TodoInputTextField
 @Composable
-fun TodoItemInput(onItemComplete: (TodoItem) -> Unit) {  //이벤트(onItemComplete)를 인자로 함.
-    // onItemComplete is an event will fire when an item (TodoItem) is completed by the user
+fun TodoInputTextField(text: String, onTextChange: (String) -> Unit, modifier: Modifier) { //add a value(text) and onValueChange(onTextChange) parameter
+//    val (text, setText) = remember {  // -> to remember itself
+//        mutableStateOf("")
+//    }
+//    TodoInputText(text, setText, modifier)
+    TodoInputText(text, onTextChange, modifier)
+}
 
+
+/**
+ * text field 를 편집가능하게 만들기 위해서는 -> Convert TodoItemInput to a stateless composable
+    * we need to hoist the state from TodoItemInput
+    * What we can do instead is split the composable into two – one that has state and the other that is stateless.
+ */
+
+//새로 todo아이템 쓸 때만 필요한 부분
+@Composable
+fun TodoItemEntryInput(onItemComplete: (TodoItem) -> Unit) {
     val (text, setText) = remember { mutableStateOf("") }  //원래 TodoInputTextField 에 있던 state 인데 부모 안으로 이동
     val (icon, setIcon) = remember { mutableStateOf(TodoIcon.Default)}  //icon 관련 state
     val iconsVisible = text.isNotBlank()   //text 에 따라 달라지는 요소 (TodoItemInput 의 state 는 아님)
@@ -124,15 +128,34 @@ fun TodoItemInput(onItemComplete: (TodoItem) -> Unit) {  //이벤트(onItemCompl
         setIcon(TodoIcon.Default)
         setText("")
     }
+    TodoItemInput(
+        text = text,
+        onTextChange = setText,
+        icon = icon,
+        onIconChange = setIcon,
+        submit = submit,
+        iconsVisible = iconsVisible
+    )
+}
 
+@Composable
+fun TodoItemInput(
+    text: String,
+    onTextChange: (String) -> Unit,
+    icon: TodoIcon,
+    onIconChange: (TodoIcon) -> Unit,
+    submit: () -> Unit,
+    iconsVisible: Boolean
+) {
     Column {
-        Row(Modifier
+        Row(
+            Modifier
                 .padding(horizontal = 16.dp)
                 .padding(top = 16.dp)
         ) {
             TodoInputText(
                 text = text,
-                onTextChange = setText,
+                onTextChange = onTextChange,
                 modifier = Modifier
                     .weight(1f)
                     .padding(end = 8.dp),
@@ -140,18 +163,13 @@ fun TodoItemInput(onItemComplete: (TodoItem) -> Unit) {  //이벤트(onItemCompl
             )
             TodoEditButton(
                 onClick = submit,    //pass the submit callback to TodoEditButton
-                //세줄지움
-//                onItemComplete(TodoItem(text))   // send onItemComplete event up
-//                setText("")        // clear the internal text
-//                setIcon(TodoIcon.Default)  //-> use ICON state in the onclick listener
-//                ,
                 text = "Add",
                 modifier = Modifier.align(Alignment.CenterVertically),
                 enabled = text.isNotBlank()    // enable if text is not blank
             )
         }
         if (iconsVisible) {
-            AnimatedIconRow(icon, setIcon, Modifier.padding(top = 8.dp))
+            AnimatedIconRow(icon, onIconChange, Modifier.padding(top = 8.dp))
         } else {
             Spacer(modifier = Modifier.height(16.dp))
         }
@@ -193,9 +211,9 @@ private fun randomTint(): Float {
     return Random.nextFloat().coerceIn(0.3f, 0.9f)
 }
 
-@Preview
-@Composable
-fun PreviewTodoItemInput() = TodoItemInput(onItemComplete = { })
+//@Preview
+//@Composable
+//fun PreviewTodoItemInput() = TodoItemInput(onItemComplete = { })
 
 @Preview
 @Composable
