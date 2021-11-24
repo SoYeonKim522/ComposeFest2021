@@ -51,89 +51,121 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-fun Modifier.firstBaselineToTop(
-    firstBaselineToTop: Dp
-) = this.then(
-    layout { measurable, constraints ->
-        val placeable = measurable.measure(constraints)
-
-        // Check the composable has a first baseline
-        check(placeable[FirstBaseline] != AlignmentLine.Unspecified)
-        val firstBaseline = placeable[FirstBaseline]
-
-        // Height of the composable with padding - first baseline
-        val placeableY = firstBaselineToTop.roundToPx() - firstBaseline
-        val height = placeable.height + placeableY
-        layout(placeable.width, height) {
-            // Where the composable gets placed
-            placeable.placeRelative(0, placeableY)
-        }
-    }
-)
-
-@Preview
 @Composable
-fun TextWithPaddingToBaselinePreview() {
-    ComposeCodelabWeek21Theme {
-        Text("Hi there!", Modifier.firstBaselineToTop(32.dp))
-    }
-}
-
-@Preview
-@Composable
-fun TextWithNormalPaddingPreview() {
-    ComposeCodelabWeek21Theme {
-        Text("Hi there!", Modifier.padding(top = 32.dp))
-    }
-}
-
-@Composable
-fun MyOwnColumn(
+fun StaggeredGrid(
     modifier: Modifier = Modifier,
+    rows: Int = 3,
     content: @Composable () -> Unit
 ) {
-    Layout(
-        modifier = modifier,
-        content = content
-    ) { measurables, constraints ->
-        // measure and position children given constraints logic here
+    Layout(content = content, modifier = modifier) {
+        measurables, constraints ->
+
+        // Keep track of the width of each row
+        val rowWidths = IntArray(rows) { 0 }
+
+        // Keep track of the max height of each row
+        val rowHeights = IntArray(rows) { 0 }
+
         // Don't constrain child views further, measure them with given constraints
         // List of measured children
-        val placeables = measurables.map { measurable ->
+        val placeables = measurables.mapIndexed { index, measurable ->
+
             // Measure each child
-            measurable.measure(constraints)
-        }
-        // Track the y co-ord we have placed children up to
-        var yPosition = 0
+            val placeable = measurable.measure(constraints)
 
-        // Set the size of the layout as big as it can
-        layout(constraints.maxWidth, constraints.maxHeight) {
-            // Place children in the parent layout
-            placeables.forEach { placeable ->
-                // Position item on the screen
-                placeable.placeRelative(x = 0, y = yPosition)
+            // Track the width and max height of each row
+            val row = index % rows
+            rowWidths[row] += placeable.width
+            rowHeights[row] = Math.max(rowHeights[row], placeable.height)
 
-                // Record the y co-ord placed up to
-                yPosition += placeable.height
-            }
+            placeable
         }
     }
 }
 
-@Composable
-fun BodyContent(modifier: Modifier = Modifier) {
-    MyOwnColumn(modifier.padding(8.dp)) {
-        Text("MyOwnColumn")
-        Text("places items")
-        Text("vertically.")
-        Text("We've done it by hand!")
-    }
-}
-
-@Preview
-@Composable
-fun Preview() {
-    ComposeCodelabWeek21Theme {
-        BodyContent()
-    }
-}
+//fun Modifier.firstBaselineToTop(
+//    firstBaselineToTop: Dp
+//) = this.then(
+//    layout { measurable, constraints ->
+//        val placeable = measurable.measure(constraints)
+//
+//        // Check the composable has a first baseline
+//        check(placeable[FirstBaseline] != AlignmentLine.Unspecified)
+//        val firstBaseline = placeable[FirstBaseline]
+//
+//        // Height of the composable with padding - first baseline
+//        val placeableY = firstBaselineToTop.roundToPx() - firstBaseline
+//        val height = placeable.height + placeableY
+//        layout(placeable.width, height) {
+//            // Where the composable gets placed
+//            placeable.placeRelative(0, placeableY)
+//        }
+//    }
+//)
+//
+//@Preview
+//@Composable
+//fun TextWithPaddingToBaselinePreview() {
+//    ComposeCodelabWeek21Theme {
+//        Text("Hi there!", Modifier.firstBaselineToTop(32.dp))
+//    }
+//}
+//
+//@Preview
+//@Composable
+//fun TextWithNormalPaddingPreview() {
+//    ComposeCodelabWeek21Theme {
+//        Text("Hi there!", Modifier.padding(top = 32.dp))
+//    }
+//}
+//
+//@Composable
+//fun MyOwnColumn(
+//    modifier: Modifier = Modifier,
+//    content: @Composable () -> Unit
+//) {
+//    Layout(
+//        modifier = modifier,
+//        content = content
+//    ) { measurables, constraints ->
+//        // measure and position children given constraints logic here
+//        // Don't constrain child views further, measure them with given constraints
+//        // List of measured children
+//        val placeables = measurables.map { measurable ->
+//            // Measure each child
+//            measurable.measure(constraints)
+//        }
+//        // Track the y co-ord we have placed children up to
+//        var yPosition = 0
+//
+//        // Set the size of the layout as big as it can
+//        layout(constraints.maxWidth, constraints.maxHeight) {
+//            // Place children in the parent layout
+//            placeables.forEach { placeable ->
+//                // Position item on the screen
+//                placeable.placeRelative(x = 0, y = yPosition)
+//
+//                // Record the y co-ord placed up to
+//                yPosition += placeable.height
+//            }
+//        }
+//    }
+//}
+//
+//@Composable
+//fun BodyContent(modifier: Modifier = Modifier) {
+//    MyOwnColumn(modifier.padding(8.dp)) {
+//        Text("MyOwnColumn")
+//        Text("places items")
+//        Text("vertically.")
+//        Text("We've done it by hand!")
+//    }
+//}
+//
+//@Preview
+//@Composable
+//fun Preview() {
+//    ComposeCodelabWeek21Theme {
+//        BodyContent()
+//    }
+//}
