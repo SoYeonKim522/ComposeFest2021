@@ -57,6 +57,11 @@ private fun TodoActivityScreen(todoViewModel: TodoViewModel) {
     TodoScreen(
         items = todoViewModel.todoItems,
         onAddItem = todoViewModel::addItem,
-        onRemoveItem = todoViewModel::removeItem
+        onRemoveItem = todoViewModel::removeItem,
+        //추가 - todoScreen 이 업데이트 되었으니 필요함
+        currentlyEditing = todoViewModel.currentEditItem,
+        onStartEdit = todoViewModel::onEditItemSelected,
+        onEditItemChange = todoViewModel::onEditItemChange,
+        onEditDone = todoViewModel::onEditDone
     )
 }

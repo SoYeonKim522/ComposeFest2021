@@ -28,6 +28,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
 //We want to use this ViewModel to hoist the state from TodoScreen(Activity)
+//We define all of the state and events we'll need for this screen here
 
 class TodoViewModel : ViewModel() {
 
