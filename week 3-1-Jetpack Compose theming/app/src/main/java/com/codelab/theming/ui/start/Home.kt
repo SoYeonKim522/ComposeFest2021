@@ -34,6 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -41,6 +42,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.codelab.theming.R
@@ -109,7 +111,7 @@ fun Header(
     ) {
         Text(
             text = text,
-            style = MaterialTheme.typography.subtitle2,
+            style = MaterialTheme.typography.subtitle2, //subtitle2로 변경
             modifier = modifier
                 .fillMaxWidth()
                 //            .background(Color.LightGray)
@@ -155,6 +157,7 @@ fun FeaturedPost(
     }
 }
 
+//포스트의 날짜, read time, 태그 부분
 @Composable
 private fun PostMetadata(
     post: Post,
@@ -167,11 +170,19 @@ private fun PostMetadata(
         append(divider)
         append(stringResource(R.string.read_time, post.metadata.readTimeMinutes))
         append(divider)
-        post.tags.forEachIndexed { index, tag ->
+
+        //태그 스타일 정의
+        val tagStyle = MaterialTheme.typography.overline.toSpanStyle().copy(
+               background = MaterialTheme.colors.primary.copy(alpha = 0.1f)
+        )
+
+        post.tags.forEachIndexed { index, tag ->  //포스트 데이터 클래스에 들어있는 태그 정보들 각각에 적용
             if (index != 0) {
                 append(tagDivider)
             }
-            append(" ${tag.uppercase(Locale.getDefault())} ")
+            withStyle(tagStyle) {  //태그 스타일 적용
+                append(" ${tag.uppercase()} ")
+            }
         }
     }
     //강조하기 (medium level로 강조)
@@ -184,6 +195,7 @@ private fun PostMetadata(
     }
 }
 
+//home 화면 popular 리스트 아이템
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun PostItem(
@@ -197,6 +209,7 @@ fun PostItem(
         icon = {
             Image(
                 painter = painterResource(post.imageThumbId),
+                modifier = Modifier.clip(shape = MaterialTheme.shapes.small),  //shape 추가
                 contentDescription = null
             )
         },
