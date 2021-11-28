@@ -47,7 +47,7 @@ android {
     }
     buildFeatures {
         dataBinding true
-        compose true
+        compose true      //Compose
     }
     composeOptions {
         kotlinCompilerExtensionVersion rootProject.composeVersion
